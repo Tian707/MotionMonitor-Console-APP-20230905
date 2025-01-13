@@ -1,0 +1,37 @@
+#include <SPI.h>           // Include the SPI library (used for communication)
+#include <MFRC522.h>       // Include the MFRC522 library (for RFID module)
+
+// Define pins for RFID connections
+#define SS_PIN 10          // SDA connected to pin 10 on Arduino
+#define RST_PIN 9          // RST connected to pin 9 on Arduino
+
+MFRC522 rfid(SS_PIN, RST_PIN);  // Create an MFRC522 object using the defined pins
+
+void setup() {
+  Serial.begin(9600);      // Start the serial communication at 9600 baud rate
+  SPI.begin();             // Initialize the SPI bus
+  rfid.PCD_Init();         // Initialize the RFID module
+  Serial.println("Ready to scan a card...");
+}
+
+void loop() {
+  // Check if a new RFID card is present
+  if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) {
+    return;  // If no new card is detected, do nothing and return
+  }
+
+  // Print the card's unique ID
+  Serial.print("Card ID: ");
+  for (byte i = 0; i < rfid.uid.size; i++) {
+    Serial.print(rfid.uid.uidByte[i], HEX);  // Print each byte of the card ID in hexadecimal
+    if (i != rfid.uid.size - 1) Serial.print(":");  // Add ":" between bytes for better readability
+  }
+  Serial.println();  // End the line after printing the card ID
+
+  // Print additional information
+  Serial.print("Number of bytes in card ID: ");
+  Serial.println(rfid.uid.size);  // Print the number of bytes in the card ID
+
+  // Halt the reader until the next card is presented
+  rfid.PICC_HaltA();
+}
